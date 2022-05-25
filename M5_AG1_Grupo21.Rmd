@@ -1,0 +1,186 @@
+
+---
+title:    "Técnicas Avanzadas de Predicción Introducción a Métodos Temporales y Espaciales por Victor V. y Ronald S."
+license:  by-nc-sa
+urlcolor: blue
+output:
+  html_document: 
+    theme:        cosmo 
+    highlight:    tango 
+    toc:          true
+    toc_float:    true
+    code_folding: show
+  word_document:  
+    toc: yes
+    reference_docx: template_style.docx
+  epuRate::epurate:
+    toc:             TRUE
+    number_sections: FALSE
+    code_folding:    "show"
+  pdf_document:   default
+---
+
+### M5_AG1_MODELO LINEAL GENERALIZADOS. INFERENCIA
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+#Crea diagrama de cajas
+diag_cajas<-function(table,filas=6,columnas=3,horizontal=TRUE){
+  
+  n<-ncol(table)
+  mar.default <- c(2,2,2,2) 
+  #par(mar=c(1,1,1,1))
+  par(mfrow = c(filas, columnas), mar = mar.default + c(2, 0, 0, 0)) 
+
+  sapply(seq(1,length(table)),function(j)boxplot(table[,j],main=colnames(table)[j],horizontal = horizontal,xlab="",col="blue"))
+}
+
+df <- read.table("https://www-eio.upc.edu/~pau/cms/rdata/csv/COUNT/affairs.cvs", header = TRUE, sep = ",")
+
+
+```
+
+
+**Descripción de la tarea**   
+
+Contamos con los datos de número de casos de “affairs” (Encuentros amorosos fuera de la pareja / infidelidades). La base de datos contiene:
+
+<ul>
+<li>naffairs: number of affairs within last year. </li>
+<li>kids: 1=have children;0= no children. </li>
+<li>vryunhap: (1/0) very unhappily married. </li>
+<li>unhap: (1/0) unhappily married. </li>
+<li>avgmarr: (1/0) average married. </li>
+<li>hapavg: (1/0) happily married. </li>
+<li>vryhap: (1/0) very happily married. </li>
+<li>antirel: (1/0) anti religious. </li>
+<li>notrel: (1/0) not religious. </li>
+<li>slghtrel: (1/0) slightly religious. </li>
+<li>smerel: (1/0) somewhat religious. </li>
+<li>vryrel: (1/0) very religious. </li>
+<li>yrsmarr1: (1/0) >0.75 yrs. </li>
+<li>yrsmarr2: (1/0) >1.5 yrs. </li>
+<li>yrsmarr3: (1/0) >4.0 yrs. </li>
+<li>yrsmarr4: (1/0) >7.0 yrs. </li>
+<li>yrsmarr5: (1/0) >10.0 yrs. </li>
+<li>yrsmarr6: (1/0) >15.0 yrs.</li>
+</ul>
+<br>
+Fuente de datos:https://www-eio.upc.edu/~pau/cms/rdata/csv/COUNT/affairs.cvs 
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+head(df)
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+summary(df)
+
+```
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+library(ggplot2)
+ggplot(df, aes(x = naffairs )) +
+    geom_density(alpha = .2, fill = "#FF6666")
+```
+
+    
+**Actividades**   
+
+### 1) ¿Cuáles son las variables que definen la probabilidad de ser o no infiel?  
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 2) Realizad un modelo de conteos de infidelidades. ¿Son las mismas variables las que afectan respecto al modelo anterior?
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 3) Argumentad la razón por la que no podemos incluir todas las variables yrsmarr dentro del modelo.  
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 4) Calculad la frecuencia de infidelidades de una persona con más de 10 años de matrimonio, no-religioso, sin hijos. Sin saber el grado de satisfacción con el matrimonio.   
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 5) ¿Podríais calcular el 95% de confianza de la estimación anterior? 
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 6) Calculad, bajo qué nivel de confianza, los residuos de la distribución pueden considerarse normales.  
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 7) Calculad si la combinación de Años de Matrimonio e Hijos da nueva información a nuestro modelo.  
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 8) Teniendo la combinación de Años de Matrimonio e Hijos metido en el modelo, ¿cuál sería el cambio en infidelidades de no tener hijos a tener hijos?   
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+### 9) Calculad una variable que convierta las dummies de años de matrimonio en numérica. Calculad también esta misma variable al cuadrado. ¿En teoría hay alguna edad de matrimonio en la que cada año adicional suponga un descenso de las infidelidades?  
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
+
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+```
