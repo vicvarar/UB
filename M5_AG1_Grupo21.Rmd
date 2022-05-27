@@ -36,6 +36,23 @@ diag_cajas<-function(table,filas=6,columnas=3,horizontal=TRUE){
 
 df <- read.table("https://www-eio.upc.edu/~pau/cms/rdata/csv/COUNT/affairs.cvs", header = TRUE, sep = ",")
 
+df$naffairs[is.na(df$naffairs)]<-mean(df$naffairs,na.rm=TRUE)
+df$kids[is.na(df$kids)]<-mean(df$kids,na.rm=TRUE)
+df$vryunhap[is.na(df$vryunhap)]<-mean(df$vryunhap,na.rm=TRUE)
+df$unhap[is.na(df$unhap)]<-mean(df$unhap,na.rm=TRUE)
+df$avgmarr[is.na(df$avgmarr)]<-mean(df$avgmarr,na.rm=TRUE)
+df$hapavg[is.na(df$hapavg)]<-mean(df$hapavg,na.rm=TRUE)
+df$vryhap[is.na(df$vryhap)]<-mean(df$vryhap,na.rm=TRUE)
+df$notrel[is.na(df$notrel)]<-mean(df$notrel,na.rm=TRUE)
+df$smerel[is.na(df$smerel)]<-mean(df$smerel,na.rm=TRUE)
+df$vryrel[is.na(df$vryrel)]<-mean(df$vryrel,na.rm=TRUE)
+df$yrsmarr1[is.na(df$yrsmarr1)]<-mean(df$yrsmarr1,na.rm=TRUE)
+df$yrsmarr2[is.na(df$yrsmarr2)]<-mean(df$yrsmarr2,na.rm=TRUE)
+df$yrsmarr3[is.na(df$yrsmarr3)]<-mean(df$yrsmarr3,na.rm=TRUE)
+df$yrsmarr4[is.na(df$yrsmarr4)]<-mean(df$yrsmarr4,na.rm=TRUE)
+df$yrsmarr5[is.na(df$yrsmarr5)]<-mean(df$yrsmarr5,na.rm=TRUE)
+df$yrsmarr6[is.na(df$yrsmarr6)]<-mean(df$yrsmarr6,na.rm=TRUE)
+
 
 ```
 
@@ -65,17 +82,18 @@ Contamos con los datos de número de casos de “affairs” (Encuentros amorosos
 <li>yrsmarr6: (1/0) >15.0 yrs.</li>
 </ul>
 <br>
-Fuente de datos:https://www-eio.upc.edu/~pau/cms/rdata/csv/COUNT/affairs.cvs 
+Fuente de datos: https://www-eio.upc.edu/~pau/cms/rdata/csv/COUNT/affairs.cvs 
 
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
 head(df)
-
 ```
 
+Sumario del dataset:
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
 summary(df)
 
 ```
+Densidad de naffairs:
 
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
 library(ggplot2)
@@ -88,73 +106,208 @@ ggplot(df, aes(x = naffairs )) +
 
 ### 1) ¿Cuáles son las variables que definen la probabilidad de ser o no infiel?  
 
-```{r echo=FALSE,warning=FALSE,message=FALSE}
-
-```
-
+Crear nuestro modelo inicial usando GLM, luego usamos la libreria DHARMa para graficar los residuos estimados, identificamos en nuestras pruebas de dispercion un valor inicial de p=0.648
 
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
 
+mylogit <- glm(naffairs~., data = df, family = gaussian())
+summary(mylogit)
+
+
+simulated_resids <- DHARMa::simulateResiduals(fittedModel = mylogit, 
+                                              plot = F)
+
+DHARMa::plotQQunif(simulated_resids)
+
 ```
+
 
 ### 2) Realizad un modelo de conteos de infidelidades. ¿Son las mismas variables las que afectan respecto al modelo anterior?
 
+R/ Aplicamos el conteo STEPWISE para identificar las variables que mejor describe naffairs:
+
+
+STEPWISE (forward):
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
+intercept_only <- lm(naffairs ~ 1, data=df)
+all <- lm(naffairs ~ ., data=df)
+forward <- step(intercept_only, direction='forward', scope=formula(all), trace=0)
+forward$anova
+forward$coefficients
+
+```
+STEPWISE (backward):
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+intercept_only <- lm(naffairs ~ 1, data=df)
+all <- lm(naffairs ~., data=df)
+backward <- step(all, direction='backward', scope=formula(all), trace=0)
+backward$anova
+backward$coefficients
+
+```
+STEPWISE (both):
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+intercept_only <- lm(naffairs ~ 1, data=df)
+all <- lm(naffairs ~ ., data=df)
+both <- step(intercept_only, direction='both', scope=formula(all), trace=0)
+both$anova
+both$coefficients
+
+```
+
+Encontramos que el modelo Backwards tuvo una reducción estadísticamente significativa con un AIC de 1356.55 en comparación con los otros modelos, esto nos ayuda a definir una mejor formula para nuestro modelo usando GLM luego usaremos la libreria DHARMa para graficar los residuos estimados, identificamos en nuestras pruebas de dispercion un valor mejorado de p=0.792
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+mylogit <- glm(naffairs ~ vryunhap + unhap + antirel + notrel + slghtrel + yrsmarr1 + yrsmarr2 + yrsmarr3 + yrsmarr4, data = df, family = gaussian())
+summary(mylogit)
+
+
+simulated_resids <- DHARMa::simulateResiduals(fittedModel = mylogit, 
+                                              plot = F)
+
+DHARMa::plotQQunif(simulated_resids)
 
 ```
 
 
-```{r echo=FALSE,warning=FALSE,message=FALSE}
 
-```
 
 ### 3) Argumentad la razón por la que no podemos incluir todas las variables yrsmarr dentro del modelo.  
 
+Creamos un nuevo campo calculado usando las variables yrsmarr[1-6] llamado myears donde asignamos un peso a la cantidad de años de casado y aplicamos STEPWISE nuevamente para ver si podemos mejorar nuestro modelo sin estas variables.
+
+
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
+df2 <- df[,c(1,2,3,4,5,6,7,8,9,10,11,12,13)]
+df2$myears <- df$yrsmarr1 * 0.75 + df$yrsmarr2 * 1.5 + df$yrsmarr3 * 4 + df$yrsmarr4 * 7 + df$yrsmarr5 * 10 + df$yrsmarr6 * 15
+
+mylogit <- glm(naffairs ~., data = df2, family = gaussian())
+summary(mylogit)
+
+
+```
+STEPWISE (forward):
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+intercept_only <- lm(naffairs ~ 1, data=df2)
+all <- lm(naffairs ~ ., data=df2)
+forward <- step(intercept_only, direction='forward', scope=formula(all), trace=0)
+forward$anova
+forward$coefficients
+
+```
+STEPWISE (backward):
+
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+intercept_only <- lm(naffairs ~ 1, data=df2)
+all <- lm(naffairs ~., data=df2)
+backward <- step(all, direction='backward', scope=formula(all), trace=0)
+backward$anova
+backward$coefficients
+
+```
+STEPWISE (both):
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+intercept_only <- lm(naffairs ~ 1, data=df2)
+all <- lm(naffairs ~ ., data=df2)
+both <- step(intercept_only, direction='both', scope=formula(all), trace=0)
+both$anova
+both$coefficients
 
 ```
 
 
+Encontramos que le modelo Backwards tuvo una reducción estadísticamente significativa con un AIC de 1353.50 en comparación con los otros modelos. Por eso lo seleccionamos para la descripcion de la cantidad de naffairs, esto nos ayuda a definir una mejor formula para nuestro modelo usando GLM, luego usamos la libreria DHARMa para graficar los residuos estimados, identificamos en nuestras pruebas de dispercion un valor significativamente mejorado de p=0.848
+
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+mylogit <- glm(naffairs ~ vryunhap + unhap + antirel + notrel + slghtrel + myears, data = df2, family = gaussian())
+summary(mylogit)
+
+
+simulated_resids <- DHARMa::simulateResiduals(fittedModel = mylogit, 
+                                              plot = F)
+
+DHARMa::plotQQunif(simulated_resids)
 
 ```
 
 ### 4) Calculad la frecuencia de infidelidades de una persona con más de 10 años de matrimonio, no-religioso, sin hijos. Sin saber el grado de satisfacción con el matrimonio.   
 
-```{r echo=FALSE,warning=FALSE,message=FALSE}
-
-```
-
+R/ La frecuencia de infidelidades para una persona con más de 10 años de matrimonio, no-religioso y sin hijos. Sin saber el grado de satisfacción con el matrimonio es de 1.876804
 
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
 
+
+mylogit <- lm(naffairs ~ vryunhap + unhap + antirel + notrel + slghtrel + myears, data = df2, family = gaussian())
+
+Input_variable <- df2[1,]
+Input_variable$naffairs <- 0
+
+Input_variable$kids <- 0
+Input_variable$myears <-10
+
+Input_variable$antirel <- 0
+Input_variable$notrel <- 1
+Input_variable$slghtrel <- 0
+Input_variable$smerel <- 0
+Input_variable$vryrel <- 0
+
+
+Input_variable$vryunhap <- 0
+Input_variable$unhap <- 0
+Input_variable$avgmarr <- 0
+Input_variable$hapavg <- 0
+Input_variable$vryhap <- 0
+
+
+r1 <- c() 
+
+veces <- 5
+for (x in 1:veces){
+  Input_variable$myears <-10 + x 
+  r1[x] <-  predict(mylogit, newdata = Input_variable)
+}
+mean(r1)
+
 ```
+
 
 ### 5) ¿Podríais calcular el 95% de confianza de la estimación anterior? 
 
-```{r echo=FALSE,warning=FALSE,message=FALSE}
-
-```
-
+R/Calculando el 95% de confianza encontramos el resultado lwr en 1.457937   y upr 2.724889 
 
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
-
+predict(mylogit, newdata = Input_variable, interval = "confidence")
 ```
 
 ### 6) Calculad, bajo qué nivel de confianza, los residuos de la distribución pueden considerarse normales.  
 
-```{r echo=FALSE,warning=FALSE,message=FALSE}
+R/ Generamos una tabla de analisis de variaza para determinar los codigos de significacia de las variables del modelo. Graficamos mediante la libreria DHARMA los residuos del modelo.
 
+```{r echo=FALSE,warning=FALSE,message=FALSE}
+anova(mylogit,
+      test = "Chisq")
 ```
-
-
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
+simulated_resids <- DHARMa::simulateResiduals(fittedModel = mylogit, 
+                                              plot = F)
 
+DHARMa::plotResiduals(simulated_resids)
 ```
 
 ### 7) Calculad si la combinación de Años de Matrimonio e Hijos da nueva información a nuestro modelo.  
 
+Observamos la densidad de los datos de años de Matrimonio e Hijos:
+
 ```{r echo=FALSE,warning=FALSE,message=FALSE}
+
+ggplot(df2, aes(x = kids )) +
+    geom_density(alpha = .2, fill = "#FF6666")
+
+ggplot(df2, aes(x = myears )) +
+    geom_density(alpha = .2, fill = "#FF6666")
 
 ```
 
